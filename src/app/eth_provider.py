@@ -14,7 +14,7 @@ def get_provider(network: str, api_key: str = None) -> Web3:
 
     # Check if connected
     if w3.is_connected():
-        print("✅ Successfully connected to Ethereum Mainnet!")
+        print(f"✅ Successfully connected to {network.capitalize()} Network!")
     else:
         print("❌ Connection failed!")
     
