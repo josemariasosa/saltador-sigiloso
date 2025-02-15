@@ -1,4 +1,24 @@
-## Foundry
+## Saltador Sigiloso
+
+<p align="center">
+  <img src="media/logo-2.jpeg" alt="Saltador Sigiloso Logo" width="350" height="350"/>
+</p>
+
+
+```sh
+forge init --vscode saltador-sigiloso
+
+python3.13 -m venv venv
+
+source venv/bin/activate
+
+python -m pip install --upgrade pip
+
+python -m pip install pandas web3
+
+```
+
+
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
