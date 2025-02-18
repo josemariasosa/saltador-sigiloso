@@ -7,18 +7,22 @@ from datetime import datetime
 import pandas as pd
 
 
-def update_account_balances(w3: Web3, wallet_address: str, network: str = "arbitrum"):
-    now = datetime.now()
+def update_account_balances(w3: Web3, wallet_address: str, network: str, block_number = 'latest'):
+    if block_number == 'latest':
+        block_number = w3.eth.block_number
+
+    # Fetch block details
+    block = w3.eth.get_block(block_number)
+
     data = pd.DataFrame(
-        get_token_balances(w3, wallet_address, network)
-        + [get_native_token_balance(w3, wallet_address, network)]
+        get_token_balances(w3, wallet_address, network, block)
+        + [get_native_token_balance(w3, wallet_address, network, block)]
     )
-    data["timestamp"] = now
 
     store_account_balances(data)
 
 
-def get_token_balances(w3: Web3, wallet_address: str, network: str) -> list:
+def get_token_balances(w3: Web3, wallet_address: str, network: str, block) -> list:
     if network not in TOKENS.keys():
         raise ValueError(f"Network {network} not found in TOKENS")
 
@@ -31,31 +35,40 @@ def get_token_balances(w3: Web3, wallet_address: str, network: str) -> list:
         for desc, address in token_addresses.items():
             token_contract = w3.eth.contract(address=Web3.to_checksum_address(address), abi=erc20_abi)
 
-            balance = token_contract.functions.balanceOf(wallet_address).call()
-            decimals = token_contract.functions.decimals().call()
+            try:
+                balance = token_contract.functions.balanceOf(
+                    Web3.to_checksum_address(wallet_address)
+                ).call(block_identifier=block.number)
+            except:
+                balance = 0
 
             data.append({
+                "timestamp": block.timestamp,
+                "block_number": block.number,
                 "network": network,
                 "owner": wallet_address,
                 "token_symbol": ticker,
                 "token_desc": desc,
                 "token_address": address,
-                "decimals": decimals,
                 "balance": str(balance),
             })
 
     return data
 
 
-def get_native_token_balance(w3: Web3, wallet_address: str, network: str) -> dict:
+def get_native_token_balance(w3: Web3, wallet_address: str, network: str, block) -> dict:
     return {
+        "timestamp": block.timestamp,
+        "block_number": block.number,
         "network": network,
         "owner": wallet_address,
         "token_symbol": "eth",
         "token_desc": "native",
         "token_address": None,
-        "decimals": 18,
-        "balance": str(w3.eth.get_balance(wallet_address)),
+        "balance": str(w3.eth.get_balance(
+            Web3.to_checksum_address(wallet_address),
+            block_identifier=block.number)
+        ),
     }
 
 

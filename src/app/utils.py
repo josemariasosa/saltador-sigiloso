@@ -1,4 +1,7 @@
 import json
+from app.constants import TOKENS
+
+import pandas as pd
 
 
 def get_abi(contract_name):
@@ -15,3 +18,15 @@ def calculate_total_usd(row):
 
     total_usd = (balance * price) / 10 ** (decimals + 8)
     return "{:.2f}".format(total_usd)
+
+
+def get_token_details(network: str = "arbitrum") -> pd.DataFrame:
+    tokens = TOKENS[network]
+    data = []
+    for ticker, token in tokens.items():
+        data.append({
+            "token_symbol": ticker,
+            "decimals": token.get("decimals"),
+            "category": token.get("category"),
+        })
+    return pd.DataFrame(data)

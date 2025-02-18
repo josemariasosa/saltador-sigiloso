@@ -4,6 +4,7 @@ from app.price_feed import update_token_prices
 from app.constants import ALPHA_CENTAURI_ADDRESS, VALKYRIE_ONE_ADDRESS
 from app.token import update_account_balances, update_credit_debit
 from app.utils import calculate_total_usd
+from app.historical import update_historical_prices_and_balances
 
 from datetime import datetime
 from web3 import Web3
@@ -13,72 +14,49 @@ import pandas as pd
 import sqlite3
 
 
-def main(update_prices: bool = False, update_balances: bool = False):
-# def main(update_prices: bool = True, update_balances: bool = True):
+CONFIG = {
+    "update_historical": True,
+    "update_prices": False,
+    "update_balances": False,
+    "network": "arbitrum"
+}
+
+def main(config: dict = CONFIG):
 
     setup_sqlite()
+    w3 = get_provider(config["network"])
 
-    if update_prices:
-        update_token_prices()
-
-    if update_balances:
-        w3 = get_provider("arbitrum")
-        update_account_balances(w3, VALKYRIE_ONE_ADDRESS)
-
-    prices = get_latest_token_prices()
-    balances = get_latest_account_balances(VALKYRIE_ONE_ADDRESS)
-
-    balances = balances.merge(prices.drop(columns=["timestamp"]), on="token_symbol", how="left")
-    balances["total_usd"] = balances.apply(lambda row: calculate_total_usd(row), axis=1)
-
-
-    print(prices)
-    print("---------------------")
-    print(balances.drop(columns=["owner", "timestamp", "token_address"]))
-
-    update_credit_debit(VALKYRIE_ONE_ADDRESS, balances)
+    if config["update_historical"]:
+        update_historical_prices_and_balances(w3, config["network"])
 
 
 
-    # data = get_data(w3)
+    # if update_prices:
+    #     update_token_prices()
 
-    # store_data(data)
+    # if update_balances:
+    #     w3 = get_provider("arbitrum")
+    #     update_account_balances(w3, VALKYRIE_ONE_ADDRESS)
 
-    # print("🚀 Done!")
+    # prices = get_latest_token_prices()
+    # balances = get_latest_account_balances(VALKYRIE_ONE_ADDRESS)
 
-    # query_data()
+    # balances = balances.merge(prices.drop(columns=["timestamp"]), on="token_symbol", how="left")
+    # balances["total_usd"] = balances.apply(lambda row: calculate_total_usd(row), axis=1)
+
+
+    # print(prices)
+    # print("---------------------")
+    # print(balances.drop(columns=["owner", "timestamp", "token_address"]))
+
+    # update_credit_debit(VALKYRIE_ONE_ADDRESS, balances)
 
 
 
 
 
-def store_data(df: pd.DataFrame):
-    # Connect to SQLite database (or create it if not exists)
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    # Insert new row
-    df.to_sql("eth_balances", conn, if_exists="append", index=False)
-
-    # Commit and close connection
-    conn.commit()
-    conn.close()
-
-    print("✅ Data stored successfully in SQLite!")
 
 
-def query_data():
-    # Reconnect to database
-    conn = sqlite3.connect(DB_PATH)
-
-    # Read table
-    df_check = pd.read_sql("SELECT * FROM eth_balances", conn)
-
-    # Display
-    print(df_check)
-
-    # Close connection
-    conn.close()
 
 
 if __name__ == "__main__":

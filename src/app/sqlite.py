@@ -1,6 +1,8 @@
 import os
 import sqlite3
 import pandas as pd
+import rubik as rk
+
 
 # Ensure the db folder exists
 DB_DIR = "db"
@@ -14,20 +16,11 @@ def setup_sqlite():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Create table if it does not exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS eth_balances (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            eth_address TEXT,
-            eth_balance TEXT
-        )
-    """)
-
     # cursor.execute("""
     #     CREATE TABLE IF NOT EXISTS aave_trades (
     #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #         timestamp TEXT,
+    #         timestamp INTEGER,
+    #         block_number INTEGER,
     #         network TEXT,
     #         owner TEXT,
     #         token_symbol TEXT,
@@ -41,13 +34,13 @@ def setup_sqlite():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS account_balances (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
+            timestamp INTEGER,
+            block_number INTEGER,
             network TEXT,
             owner TEXT,
             token_symbol TEXT,
             token_desc TEXT,
             token_address TEXT,
-            decimals INTEGER,
             balance TEXT
         )
     """)
@@ -55,7 +48,8 @@ def setup_sqlite():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS valkyrie_one_balances (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
+            timestamp INTEGER,
+            block_number INTEGER,
             credit_balance TEXT,
             debit_balance TEXT,
             total_balance TEXT
@@ -66,7 +60,7 @@ def setup_sqlite():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS token_prices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
+            timestamp INTEGER,
             token_symbol TEXT,
             price_usd_8_decimals TEXT
         )
@@ -77,6 +71,27 @@ def setup_sqlite():
     conn.close()
 
     print("✅ SQLite setup completed!")
+
+
+def check_if_account_balances_exist(wallet_address: str, block_number: int, network: str = "arbitrum") -> bool:
+    # Connect to SQLite database
+    conn = sqlite3.connect(DB_PATH)
+
+    query = f"""
+        SELECT COUNT(*)
+        FROM account_balances
+        WHERE owner = '{wallet_address}' AND block_number = {block_number} AND network = '{network}';
+    """
+
+    # Query latest token prices
+    cursor = conn.cursor()
+    cursor.execute(query)
+    count = cursor.fetchone()[0]
+
+    # Close connection
+    conn.close()
+
+    return count > 0
 
 
 def store_token_prices(df: pd.DataFrame):
@@ -126,8 +141,6 @@ def store_account_balances(df: pd.DataFrame):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    print(df.drop(columns=["owner", "timestamp"]))
-
     # Insert new row
     df.to_sql("account_balances", conn, if_exists="append", index=False)
 
@@ -158,5 +171,28 @@ def get_latest_account_balances(wallet_address: str, network: str = "arbitrum") 
 
     # Close connection
     conn.close()
+
+    return df
+
+
+def get_account_balance_history(wallet_address: str, network: str = "arbitrum") -> pd.DataFrame:
+    # Connect to SQLite database
+    conn = sqlite3.connect(DB_PATH)
+
+    query = f"""
+        SELECT *
+        FROM account_balances
+        WHERE owner = '{wallet_address}' AND network = '{network}'
+        ORDER BY timestamp;
+    """
+
+    # Query latest token prices
+    df = pd.read_sql(query, conn).drop(columns=["id"])
+
+    # Close connection
+    conn.close()
+
+    df = rk.groupto_dict(df, ["token_symbol", "token_desc", "token_address", "balance"], "tokens")
+    df = rk.groupto_list(df, ["timestamp", "block_number", "network", "owner"], "tokens")
 
     return df

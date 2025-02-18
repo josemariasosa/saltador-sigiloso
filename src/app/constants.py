@@ -22,9 +22,13 @@ TOKENS = {
                 "aave": "0x078f358208685046a11C85e8ad32895DED33A249",
             },
             "coingecko": "wrapped-bitcoin",
+            "decimals": 8,
+            "category": "bitcoin",
         },
         "eth": {
             "coingecko": "ethereum",
+            "decimals": 18,
+            "category": "ethereum",
         },
         "weth": {
             "addresses" : {
@@ -32,6 +36,8 @@ TOKENS = {
                 "aave": "0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8",
             },
             "coingecko": "weth",
+            "decimals": 18,
+            "category": "ethereum",
         },
         "usdt": {
             "addresses" : {
@@ -40,6 +46,8 @@ TOKENS = {
                 "aaveDebt": "0xfb00AC187a8Eb5AFAE4eACE434F493Eb62672df7",
             },
             "coingecko": "tether",
+            "decimals": 6,
+            "category": "stablecoin",
         },
         "usdc": {
             "addresses" : {
@@ -48,6 +56,8 @@ TOKENS = {
                 "aaveDebt": "0xf611aEb5013fD2c0511c9CD55c7dc5C1140741A6",
             },
             "coingecko": "usd-coin",
+            "decimals": 6,
+            "category": "stablecoin",
         },
         "dai": {
             "addresses" : {
@@ -55,6 +65,8 @@ TOKENS = {
                 "aave": "0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE",
             },
             "coingecko": "dai",
+            "decimals": 18,
+            "category": "stablecoin",
         },
         "arb": {
             "addresses" : {
@@ -62,6 +74,8 @@ TOKENS = {
                 "aave": "0x6533afac2E7BCCB20dca161449A13A32D391fb00",
             },
             "coingecko": "arbitrum",
+            "decimals": 18,
+            "category": "altcoin",
         },
         "link": {
             "addresses" : {
@@ -69,6 +83,8 @@ TOKENS = {
                 "aave": "0x191c10Aa4AF7C30e871E70C95dB0E4eb77237530",
             },
             "coingecko": "chainlink",
+            "decimals": 18,
+            "category": "altcoin",
         },
         "gho": {
             "addresses" : {
@@ -77,6 +93,8 @@ TOKENS = {
                 "aaveDebt": "0x18248226C16BF76c032817854E7C83a2113B4f06",
             },
             "coingecko": "gho",
+            "decimals": 18,
+            "category": "stablecoin",
         },
     },
 }
